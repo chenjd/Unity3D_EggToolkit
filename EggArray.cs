@@ -17,6 +17,7 @@ namespace EggToolkit
 		private int capacity;
 		private int count;
 		private T[] items;
+		private int growthFactor = 2;
 
 		public EggArray() : this(8)
 		{
@@ -27,7 +28,9 @@ namespace EggToolkit
 			this.capacity = capacity;
 			this.items = new T[capacity];
 		}
-
+		/// <summary>
+		/// Attr
+		/// </summary>
 		public int Count
 		{
 			get
@@ -35,6 +38,15 @@ namespace EggToolkit
 				return this.count;
 			}
 		}
+
+		public int Capacity
+		{
+			get
+			{
+				return this.capacity;
+			}
+		}
+
 		public bool IsEmpty
 		{
 			get
@@ -49,34 +61,220 @@ namespace EggToolkit
 				return this.count == this.capacity;
 			}
 		}
-		public T First
+		/// <summary>
+		/// Methods
+		/// </summary>
+		private void Resize()
 		{
-			get
+			int capacity = this.capacity * growthFactor;
+			if (this.count > capacity)
 			{
-				if (this.count > 0)
+				this.count = capacity;
+			}
+			T[] destinationArray = new T[capacity];
+			Array.Copy(this.items, destinationArray, this.count);
+			this.items = destinationArray;
+			this.capacity = capacity;
+		}
+
+		public void Add(T item)
+		{
+			if (this.count >= this.capacity)
+			{
+				this.Resize();
+			}
+			this.items[this.count++] = item;
+		}
+		
+		public void AddRange(IEnumerable<T> collection)
+		{
+			if (collection != null)
+			{
+				foreach (T current in collection)
 				{
-					return this.items[0];
+					this.Add(current);
 				}
-				return (T)((object)null);
 			}
 		}
-		public T Last
+
+		public void Insert(int index, T item)
 		{
-			get
+			if (this.count >= this.capacity)
 			{
-				if (this.count > 0)
+				this.Resize();
+			}
+			this.count++;
+			for (int i = this.count - 1; i > index; i--)
+			{
+				this.items[i] = this.items[i - 1];
+			}
+			this.items[index] = item;
+		}
+
+		public bool Contains(T arg)
+		{
+			for (int i = 0; i < this.count; i++)
+			{
+				if (this.items[i].Equals(arg))
 				{
-					return this.items[this.count - 1];
+					return true;
 				}
-				return (T)((object)null);
+			}
+			return false;
+		}
+		
+		public void Clear()
+		{
+			if (this.count > 0)
+			{
+				for (int i = 0; i < this.count; i++)
+				{
+					this.items[i] = null;
+				}
+				this.count = 0;
 			}
 		}
-		public int Capacity
+
+		public void ToArray(T[] array)
 		{
-			get
+			if (array != null)
 			{
-				return this.capacity;
+				for (int i = 0; i < this.count; i++)
+				{
+					array[i] = this.items[i];
+				}
 			}
+		}
+
+		public void Sort(IComparer<T> comparer)
+		{
+			Array.Sort<T>(this.items, 0, this.count, comparer);
+		}
+		
+		public void Foreach(EggArray<T>.IterationHandler handler)
+		{
+			for (int i = 0; i < this.count; i++)
+			{
+				handler(this.items[i]);
+			}
+		}
+
+		public bool Remove(T arg)
+		{
+			for (int i = 0; i < this.count; i++)
+			{
+				if (this.items[i].Equals(arg))
+				{
+					this.items[i] = null;
+					this.Compact();
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		public void RemoveAt(int index)
+		{
+			if (index < this.count)
+			{
+				this.items[index] = null;
+				this.Compact();
+			}
+		}
+		
+		public T RemoveLast()
+		{
+			T result = null;
+			if (this.count > 0)
+			{
+				result = this.items[this.count - 1];
+				this.items[this.count - 1] = null;
+				this.count--;
+			}
+			return result;
+		}
+		
+		public int IndexOf(T arg)
+		{
+			for (int i = 0; i < this.count; i++)
+			{
+				if (this.items[i].Equals(arg))
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+
+
+		public T First()
+		{
+			if (this.count > 0)
+			{
+				return this.items[0];
+			}
+			return null;
+		}
+
+		public T[] First(int n)
+		{
+			if(n < 0)
+			{
+				return null;
+			}
+			if (this.count > n)
+			{
+				T[] targetArray = this.Slice(0, n);
+				return targetArray;
+			}
+			else
+			{
+				return this.items;
+			}
+		}
+
+		public T Last()
+		{
+			if (this.count > 0)
+			{
+				return this.items[this.count - 1];
+			}
+			return null;
+		}
+
+		public T[] Last(int n)
+		{
+			if(n < 0)
+			{
+				return null;
+			}
+			if(this.count > n)
+			{
+				int startIndex = this.count - 1 - n;
+				T[] target = this.Slice(startIndex, this.count - 1);
+				return target;
+			}
+			else
+			{
+				return this.items;
+			}
+		}
+		
+		public T[] Slice(int start, int end)
+		{
+			if (end < 0)
+			{
+				end = this.items.Length + end;
+			}
+			int len = end - start;
+			
+			T[] res = new T[len];
+			for (int i = 0; i < len; i++)
+			{
+				res[i] = this.items[i + start];
+			}
+			return res;
 		}
 
 		public T Get(int i)
@@ -94,25 +292,6 @@ namespace EggToolkit
 			this.Insert(0, item);
 		}
 
-		public void Insert(int index, T item)
-		{
-			if (this.count >= this.capacity)
-			{
-				this.Resize(this.capacity * 2);
-			}
-			this.count++;
-			for (int i = this.count - 1; i > index; i--)
-			{
-				this.items[i] = this.items[i - 1];
-			}
-			this.items[index] = item;
-		}
-
-		public void SetNull(int index)
-		{
-			this.items[index] = (T)((object)null);
-		}
-
 		public void Compact()
 		{
 			int num = 0;
@@ -127,43 +306,11 @@ namespace EggToolkit
 					if (num > 0)
 					{
 						this.items[i - num] = this.items[i];
-						this.items[i] = (T)((object)null);
+						this.items[i] = null;
 					}
 				}
 			}
 			this.count -= num;
-		}
-
-		public void Clear()
-		{
-			if (this.count > 0)
-			{
-				for (int i = 0; i < this.count; i++)
-				{
-					this.items[i] = (T)((object)null);
-				}
-				this.count = 0;
-			}
-		}
-
-		public void Add(T item)
-		{
-			if (this.count >= this.capacity)
-			{
-				this.Resize(this.capacity * 2);
-			}
-			this.items[this.count++] = item;
-		}
-
-		public void AddRange(IEnumerable<T> collection)
-		{
-			if (collection != null)
-			{
-				foreach (T current in collection)
-				{
-					this.Add(current);
-				}
-			}
 		}
 
 		public void Set(EggArray<T> other)
@@ -175,23 +322,11 @@ namespace EggToolkit
 			}
 		}
 
-		public bool Contains(T arg0)
+		public bool ContainsStrict(T arg)
 		{
 			for (int i = 0; i < this.count; i++)
 			{
-				if (this.items[i].Equals(arg0))
-				{
-					return true;
-				}
-			}
-			return false;
-		}
-
-		public bool ContainsStrict(T arg0)
-		{
-			for (int i = 0; i < this.count; i++)
-			{
-				if (this.items[i] == arg0)
+				if (this.items[i] == arg)
 				{
 					return true;
 				}
@@ -211,46 +346,11 @@ namespace EggToolkit
 			return (F)((object)null);
 		}
 
-		public bool Remove(T arg0)
+		public int IndexOfStrict(T arg)
 		{
 			for (int i = 0; i < this.count; i++)
 			{
-				if (this.items[i].Equals(arg0))
-				{
-					this.items[i] = (T)((object)null);
-					this.Compact();
-					return true;
-				}
-			}
-			return false;
-		}
-
-		public void RemoveAt(int index)
-		{
-			if (index < this.count)
-			{
-				this.items[index] = (T)((object)null);
-				this.Compact();
-			}
-		}
-
-		public T RemoveLast()
-		{
-			T result = (T)((object)null);
-			if (this.count > 0)
-			{
-				result = this.items[this.count - 1];
-				this.items[this.count - 1] = (T)((object)null);
-				this.count--;
-			}
-			return result;
-		}
-
-		public int IndexOf(T arg0)
-		{
-			for (int i = 0; i < this.count; i++)
-			{
-				if (this.items[i].Equals(arg0))
+				if (this.items[i] == arg)
 				{
 					return i;
 				}
@@ -258,23 +358,11 @@ namespace EggToolkit
 			return -1;
 		}
 
-		public int IndexOfStrict(T arg0)
-		{
-			for (int i = 0; i < this.count; i++)
-			{
-				if (this.items[i] == arg0)
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-
-		public int LastIndexOf(T arg0)
+		public int LastIndexOf(T arg)
 		{
 			for (int i = this.count - 1; i >= 0; i--)
 			{
-				if (this.items[i].Equals(arg0))
+				if (this.items[i].Equals(arg))
 				{
 					return i;
 				}
@@ -282,44 +370,7 @@ namespace EggToolkit
 			return -1;
 		}
 
-		public void Resize(int capacity)
-		{
-			if (this.capacity != capacity)
-			{
-				if (this.count > capacity)
-				{
-					this.count = capacity;
-				}
-				T[] destinationArray = new T[capacity];
-				Array.Copy(this.items, destinationArray, this.count);
-				this.items = destinationArray;
-				this.capacity = capacity;
-			}
-		}
 
-		public void ToArray(T[] array)
-		{
-			if (array != null)
-			{
-				for (int i = 0; i < this.count; i++)
-				{
-					array[i] = this.items[i];
-				}
-			}
-		}
-
-		public void Sort(IComparer<T> comparer)
-		{
-			Array.Sort<T>(this.items, 0, this.count, comparer);
-		}
-
-		public void Foreach(EggArray<T>.IterationHandler handler)
-		{
-			for (int i = 0; i < this.count; i++)
-			{
-				handler(this.items[i]);
-			}
-		}
 
 		public void ForeachBreak(EggArray<T>.IterationBoolHandler handler)
 		{
