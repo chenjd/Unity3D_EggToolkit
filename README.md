@@ -8,6 +8,5 @@ Unity3D-EggToolkit
 
 3. **EggDevice**:获取设备信息
 
-4. **EggArray<T>**:一个模仿泛型List的数据结构，有一些拓展内容。
 
 
