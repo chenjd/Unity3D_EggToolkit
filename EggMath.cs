@@ -12,9 +12,9 @@ using System.Text.RegularExpressions;
 namespace EggToolkit
 {
 	public static class EggMath {
-		public const float PI = 3.14159265f;
+		public const float PI = 3.14f;
 		public const float TwoPI = 6.28318548f;
-		public const float ThreePI = 9.424778f;
+		public const float ThreePI = 9.42f;
 		public const float Rad2Deg = 57.3f;
 		public const float Deg2Rad =0.017453f;
 
@@ -233,7 +233,5 @@ namespace EggToolkit
 			byte[] bytes = (byte[])arrayList.ToArray(Type.GetType("System.Byte"));
 			return Encoding.Default.GetString(bytes);
 		}
-
-	
 	}
 }
